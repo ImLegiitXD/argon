@@ -6,6 +6,7 @@ import dev.lvstrng.argon.managers.FriendManager;
 import dev.lvstrng.argon.module.ModuleManager;
 import dev.lvstrng.argon.managers.ProfileManager;
 import dev.lvstrng.argon.utils.rotation.RotatorManager;
+import lombok.Getter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 

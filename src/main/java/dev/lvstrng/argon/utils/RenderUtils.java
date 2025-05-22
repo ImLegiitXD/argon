@@ -3,6 +3,7 @@ package dev.lvstrng.argon.utils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.VertexSorter;
 import dev.lvstrng.argon.module.modules.client.ClickGUI;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gui.DrawContext;
@@ -10,6 +11,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
@@ -255,6 +257,33 @@ public final class RenderUtils {
 		}
 		BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 	}
+
+	public static void draw3DBox(MatrixStack matrices, Camera camera, Box box, Color color, float lineThickness) {
+		Vec3d cameraPos = camera.getPos();
+		Box adjustedBox = box.offset(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+
+		VertexConsumerProvider.Immediate vertexConsumers = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+
+		VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getLines());
+
+		float red = color.getRed() / 255.0f;
+		float green = color.getGreen() / 255.0f;
+		float blue = color.getBlue() / 255.0f;
+		float alpha = color.getAlpha() / 255.0f;
+
+		WorldRenderer.drawBox(
+				matrices,
+				vertexConsumer,
+				adjustedBox,
+				red,
+				green,
+				blue,
+				alpha
+		);
+
+		vertexConsumers.draw();
+	}
+
 
 	public static void renderFilledBox(MatrixStack matrices, float f, float f2, float f3, float f4, float f5, float f6, Color color) {
 		RenderSystem.enableBlend();

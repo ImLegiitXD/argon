@@ -7,10 +7,12 @@ import dev.lvstrng.argon.module.modules.client.Friends;
 import dev.lvstrng.argon.module.modules.client.SelfDestruct;
 import dev.lvstrng.argon.module.modules.combat.*;
 import dev.lvstrng.argon.module.modules.misc.*;
+import dev.lvstrng.argon.module.modules.player.Blink;
 import dev.lvstrng.argon.module.modules.render.*;
 import dev.lvstrng.argon.module.setting.KeybindSetting;
 import dev.lvstrng.argon.utils.EncryptedString;
 
+import net.minecraft.client.MinecraftClient;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ public final class ModuleManager implements ButtonListener {
 		add(new AutoHitCrystal());
 		add(new AutoInventoryTotem());
 		add(new TriggerBot());
+		add(new SelfTrap());
 		add(new AutoPot());
 		add(new AutoPotRefill());
 		add(new AutoWTap());
@@ -52,15 +55,22 @@ public final class ModuleManager implements ButtonListener {
 		add(new FakeLag());
 		add(new AutoClicker());
 		add(new KeyPearl());
+		add(new MultiTask());
 		add(new NoBreakDelay());
 		add(new Freecam());
 		add(new PackSpoof());
+		add(new DisconnectExploit());
+		add(new CobwebEscape());
 		add(new Sprint());
+
+		//Player
+		add(new Blink());
 
 		//Render
 		add(new HUD());
 		add(new NoBounce());
 		add(new PlayerESP());
+		add(new PlayerESP2());
 		add(new StorageEsp());
 		add(new TargetHud());
 
@@ -109,10 +119,14 @@ public final class ModuleManager implements ButtonListener {
 	@Override
 	public void onButtonPress(ButtonEvent event) {
 		if(!SelfDestruct.destruct) {
-			modules.forEach(module -> {
-				if(module.getKey() == event.button && event.action == GLFW.GLFW_PRESS)
-					module.toggle();
-			});
+			MinecraftClient mc = MinecraftClient.getInstance();
+
+			if (mc.currentScreen == null) {
+				modules.forEach(module -> {
+					if (module.getKey() == event.button && event.action == GLFW.GLFW_PRESS)
+						module.toggle();
+				});
+			}
 		}
 	}
 }

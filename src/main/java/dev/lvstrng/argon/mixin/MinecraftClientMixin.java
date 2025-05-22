@@ -1,10 +1,16 @@
 package dev.lvstrng.argon.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import dev.lvstrng.argon.Argon;
 import dev.lvstrng.argon.event.EventManager;
 import dev.lvstrng.argon.event.events.*;
+import dev.lvstrng.argon.module.modules.misc.MultiTask;
+import dev.lvstrng.argon.module.modules.render.NoBounce;
 import dev.lvstrng.argon.utils.MouseSimulation;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.Nullable;
@@ -12,6 +18,7 @@ import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -26,6 +33,43 @@ public class MinecraftClientMixin {
 	@Shadow
 	@Final
 	private Window window;
+
+	@Shadow @Final public GameOptions options;
+
+	@Shadow
+	@Nullable
+	public ClientPlayerEntity player;
+
+	@Shadow
+	@Nullable
+	public ClientPlayerInteractionManager interactionManager;
+
+	@ModifyExpressionValue(method = "doItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;isBreakingBlock()Z"))
+	private boolean doItemUseModifyIsBreakingBlock(boolean original) {
+		MultiTask multitask = Argon.INSTANCE.getModuleManager().getModule(MultiTask.class);
+		return !multitask.isEnabled() && original;
+	}
+
+	@ModifyExpressionValue(method = "handleBlockBreaking", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
+	private boolean handleBlockBreakingModifyIsUsingItem(boolean original) {
+		MultiTask multitask = Argon.INSTANCE.getModuleManager().getModule(MultiTask.class);
+		return !multitask.isEnabled() && original;
+	}
+
+	@ModifyExpressionValue(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0))
+	private boolean handleInputEventsModifyIsUsingItem(boolean original) {
+		MultiTask multitask = Argon.INSTANCE.getModuleManager().getModule(MultiTask.class);
+		return !multitask.attackingEntities() && original;
+	}
+
+	@Inject(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0, shift = At.Shift.BEFORE))
+	private void handleInputEventsInjectStopUsingItem(CallbackInfo info) {
+		MultiTask multitask = Argon.INSTANCE.getModuleManager().getModule(MultiTask.class);
+		if (multitask.attackingEntities() && player.isUsingItem()) {
+			if (!options.useKey.isPressed()) interactionManager.stopUsingItem(player);
+			while (options.useKey.wasPressed());
+		}
+	}
 
 	@Inject(method = "tick", at = @At("HEAD"))
 	private void onTick(CallbackInfo ci) {

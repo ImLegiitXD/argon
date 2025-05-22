@@ -15,7 +15,6 @@ import dev.lvstrng.argon.utils.Utils;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
@@ -56,55 +55,44 @@ public final class PlayerESP extends Module implements GameRenderListener {
 
 	@Override
 	public void onGameRender(GameRenderEvent event) {
+		MatrixStack matrices = event.matrices;
+		matrices.push();
+
+		Camera cam = mc.getBlockEntityRenderDispatcher().camera;
+		Vec3d cameraPos = cam.getPos();
+		matrices.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+
 		for (PlayerEntity player : mc.world.getPlayers()) {
+			if (player == mc.player) continue;
+
+			Vec3d playerPos = player.getLerpedPos(RenderTickCounter.ONE.getTickDelta(true));
+
 			if (mode.isMode(Mode.ThreeD)) {
-				if (player != mc.player) {
-					Camera cam = mc.getBlockEntityRenderDispatcher().camera;
-					if (cam != null) {
-						MatrixStack matrices = event.matrices;
-						matrices.push();
-						Vec3d vec = cam.getPos();
-						matrices.translate(-vec.x, -vec.y, -vec.z);
-					}
+				RenderUtils.renderFilledBox(
+						matrices,
+						(float) (playerPos.x - player.getWidth() / 2),
+						(float) (playerPos.y),
+						(float) (playerPos.z - player.getWidth() / 2),
+						(float) (playerPos.x + player.getWidth() / 2),
+						(float) (playerPos.y + player.getHeight()),
+						(float) (playerPos.z + player.getWidth() / 2),
+						Utils.getMainColor(alpha.getValueInt(), 1).brighter()
+				);
+			}
 
-					double xPos = MathHelper.lerp(RenderTickCounter.ONE.getTickDelta(true), player.prevX, player.getX());
-					double yPos = MathHelper.lerp(RenderTickCounter.ONE.getTickDelta(true), player.prevY, player.getY());
-					double zPos = MathHelper.lerp(RenderTickCounter.ONE.getTickDelta(true), player.prevZ, player.getZ());
+			else if (mode.isMode(Mode.TwoD)) {
+				renderOutline(player, getColor(alpha.getValueInt()), matrices);
+			}
 
-					RenderUtils.renderFilledBox(
-							event.matrices,
-							(float) xPos - player.getWidth() / 2,
-							(float) yPos,
-							(float) zPos - player.getWidth() / 2,
-							(float) xPos + player.getWidth() / 2,
-							(float) yPos + player.getHeight(),
-							(float) zPos + player.getWidth() / 2,
-							Utils.getMainColor(alpha.getValueInt(), 1).brighter());
-
-					if (tracers.getValue())
-						RenderUtils.renderLine(event.matrices, Utils.getMainColor(255, 1), mc.crosshairTarget.getPos(), player.getLerpedPos(RenderTickCounter.ONE.getTickDelta(true)));
-
-					event.matrices.pop();
-				}
-			} else if (mode.isMode(Mode.TwoD)) {
-				if (player != mc.player) {
-					renderOutline(player, getColor(alpha.getValueInt()), event.matrices);
-
-					Camera cam = mc.getBlockEntityRenderDispatcher().camera;
-					if (cam != null) {
-						MatrixStack matrices = event.matrices;
-						matrices.push();
-						Vec3d vec = cam.getPos();
-						matrices.translate(-vec.x, -vec.y, -vec.z);
-					}
-
-					if (tracers.getValue())
-						RenderUtils.renderLine(event.matrices, Utils.getMainColor(255, 1), mc.crosshairTarget.getPos(), player.getLerpedPos(RenderTickCounter.ONE.getTickDelta(true)));
-
-					event.matrices.pop();
-				}
+			if (tracers.getValue()) {
+				RenderUtils.renderLine(matrices,
+						Utils.getMainColor(255, 1),
+						cam.getPos(),
+						playerPos);
 			}
 		}
+
+		matrices.pop();
 	}
 
 	private void renderOutline(PlayerEntity e, Color color, MatrixStack stack) {

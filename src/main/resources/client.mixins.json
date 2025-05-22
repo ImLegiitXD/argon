@@ -18,6 +18,7 @@
     "ClientPlayerInteractionManagerMixin",
     "FrustumAccessor",
     "GameRendererMixin",
+    "WorldRendererMixin",
     "HandledScreenMixin",
     "InGameHudMixin",
     "KeyBindingAccessor",
