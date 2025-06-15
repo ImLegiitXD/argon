@@ -10,6 +10,8 @@ You are allowed to modify the code of this client and publish your version of th
 
 # Argon Minecraft Ghost Client
 
+## all the rendering issues are on RenderUtils (unscaledProjection & scaledProjection) idk how to fix them 😭
+
 ## Why?
 
 Originally a paid client, but since the new owner dumped me from the dev team of MY OWN CLIENT (yes, the client I STARTED and made about 85% of the client (but only got 30% of all the money made what the scam)) and demoted me, I decided to release the source code. I will try to update this as much as possible. I have updated the client to 1.21 but the damage utils are broken because mojang and fabric decide to change irrelevant stuff every update. The client cost 15 pounds for normal and 25 for beta, which ablue never ever finished and it turns out you just paid 10 bucks for the same shit. Ablue also ignores my DMs. When she does it's always the nword, insulting me or just a question mark. Ablue has also deleted a lot of old messages from my DMs and from other's too, you maybe might notice if you go through her DMs.

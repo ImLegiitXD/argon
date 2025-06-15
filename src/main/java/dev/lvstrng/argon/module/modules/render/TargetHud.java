@@ -102,7 +102,7 @@ public final class TargetHud extends Module implements HudListener, PacketSendLi
 
 			TextRenderer.drawString("Ping: " + entry.getLatency(), context, x + 5, y + 125, Color.WHITE.getRGB());
 
-			PlayerSkinDrawer.draw(context, entry.getSkinTextures().texture(), x + 3, y + 3, 20);
+			PlayerSkinDrawer.draw(context, entry.getSkinTextures(), x + 3, y + 3, 20);
 
 			if (player.hurtTime != 0) {
 				int charOff1 = x + 125;

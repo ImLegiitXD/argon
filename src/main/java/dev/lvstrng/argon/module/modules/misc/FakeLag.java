@@ -47,8 +47,9 @@ public final class FakeLag extends Module implements PlayerTickListener, PacketR
 		eventManager.add(PacketReceiveListener.class, this);
 
 		timerUtil.reset();
-		if (mc.player != null)
+		if (mc != null && mc.player != null) {
 			pos = mc.player.getPos();
+		}
 
 		delay = lagDelay.getRandomValueInt();
 		super.onEnable();
@@ -65,10 +66,10 @@ public final class FakeLag extends Module implements PlayerTickListener, PacketR
 
 	@Override
 	public void onPacketReceive(PacketReceiveEvent event) {
-		if (mc.world == null)
+		if (mc == null || mc.world == null || mc.player == null)
 			return;
 
-		if(mc.player.isDead())
+		if (mc.player.isDead())
 			return;
 
 		if (event.packet instanceof ExplosionS2CPacket) {
@@ -78,7 +79,10 @@ public final class FakeLag extends Module implements PlayerTickListener, PacketR
 
 	@Override
 	public void onPacketSend(PacketSendEvent event) {
-		if (mc.world == null || mc.player.isUsingItem() || mc.player.isDead())
+		if (mc == null || mc.world == null || mc.player == null || mc.player.isDead())
+			return;
+
+		if (mc.player.isUsingItem())
 			return;
 
 		if (event.packet instanceof PlayerInteractEntityC2SPacket || event.packet instanceof HandSwingC2SPacket || event.packet instanceof PlayerInteractBlockC2SPacket || event.packet instanceof ClickSlotC2SPacket) {
@@ -99,8 +103,10 @@ public final class FakeLag extends Module implements PlayerTickListener, PacketR
 
 	@Override
 	public void onPlayerTick() {
+		if (mc == null || mc.player == null) return;
+
 		if (timerUtil.delay(delay)) {
-			if (mc.player != null && !mc.player.isUsingItem()) {
+			if (!mc.player.isUsingItem()) {
 				reset();
 				delay = lagDelay.getRandomValueInt();
 			}
@@ -108,14 +114,18 @@ public final class FakeLag extends Module implements PlayerTickListener, PacketR
 	}
 
 	private void reset() {
-		if (mc.player == null || mc.world == null)
+		if (mc == null || mc.player == null || mc.world == null || mc.getNetworkHandler() == null)
 			return;
 
 		bool = true;
 
 		synchronized (packetQueue) {
 			while (!packetQueue.isEmpty()) {
-				mc.getNetworkHandler().getConnection().send(packetQueue.poll(), null, false);
+				try {
+					mc.getNetworkHandler().getConnection().send(packetQueue.poll(), null, false);
+				} catch (Exception e) {
+					break;
+				}
 			}
 		}
 

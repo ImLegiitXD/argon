@@ -9,10 +9,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileUtil;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ToolItem;
-import net.minecraft.item.ToolMaterial;
-import net.minecraft.item.ToolMaterials;
+import net.minecraft.item.*;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -138,7 +135,7 @@ public final class WorldUtils {
 
 	public static void placeBlock(BlockHitResult blockHit, boolean swingHand) {
 		ActionResult result = mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND, blockHit);
-		if (result.isAccepted() && result.shouldSwingHand() && swingHand) mc.player.swingHand(Hand.MAIN_HAND);
+		if (result.isAccepted() && result.isAccepted() && swingHand) mc.player.swingHand(Hand.MAIN_HAND);
 	}
 
 	public static Stream<WorldChunk> getLoadedChunks() {
@@ -197,13 +194,12 @@ public final class WorldUtils {
 		return false;
 	}
 
-	public static boolean isTool(ItemStack itemStack) {
-		if (!(itemStack.getItem() instanceof ToolItem)) {
-			return false;
-		}
-		ToolMaterial material = ((ToolItem) itemStack.getItem()).getMaterial();
-		return material == ToolMaterials.DIAMOND || material == ToolMaterials.NETHERITE;
+	public static boolean isTool(Item item) {
+		return item instanceof MiningToolItem || item instanceof ShearsItem;
 	}
+	public static boolean isTool(ItemStack itemStack) {
+		return isTool(itemStack.getItem());
+	} // thanks meteor client
 
 	public static boolean isCrit(PlayerEntity player, Entity target) {
 		return player.getAttackCooldownProgress(0.5F) > 0.9F && player.fallDistance > 0.0F && !player.isOnGround() && !player.isClimbing() && !player.isSubmergedInWater() && !player.hasStatusEffect(StatusEffects.BLINDNESS) && target instanceof LivingEntity;

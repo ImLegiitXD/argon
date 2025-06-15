@@ -27,7 +27,7 @@ public final class ClickGUI extends Module implements PacketReceiveListener {
 			.setDescription(EncryptedString.of("Enables LGBTQ mode"));
 
 	public static final BooleanSetting background = new BooleanSetting(EncryptedString.of("Background"), false).setDescription(EncryptedString.of("Renders the background of the Click Gui"));
-	public static final BooleanSetting customFont = new BooleanSetting(EncryptedString.of("Custom Font"), true);
+	public static final BooleanSetting customFont = new BooleanSetting(EncryptedString.of("Custom Font"), false);
 
 	private final BooleanSetting preventClose = new BooleanSetting(EncryptedString.of("Prevent Close"), true)
 			.setDescription(EncryptedString.of("For servers with freeze plugins that don't let you open the GUI"));
@@ -47,7 +47,7 @@ public final class ClickGUI extends Module implements PacketReceiveListener {
 				GLFW.GLFW_KEY_RIGHT_SHIFT,
 				Category.CLIENT);
 
-		addSettings(red, green, blue, alphaWindow, breathing, rainbow, background, preventClose, roundQuads, animationMode, antiAliasing);
+		addSettings(red, green, blue, alphaWindow, breathing, rainbow, background, customFont, preventClose, roundQuads, animationMode, antiAliasing);
 	}
 
 	@Override

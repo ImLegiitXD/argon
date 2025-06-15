@@ -2,6 +2,9 @@ package dev.lvstrng.argon.font;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import lombok.Getter;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.ShaderProgram;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.*;
 import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.texture.NativeImage;
@@ -151,7 +154,8 @@ public final class GlyphPage {
 		float height = glyph.height;
 
 		//getPositionColorTexProgram
-		RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
+		ShaderProgram shader = MinecraftClient.getInstance().getShaderLoader().getOrCreateProgram(ShaderProgramKeys.POSITION_TEX_COLOR);
+		RenderSystem.setShader(shader);
 		bindTexture();
 
 		BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);

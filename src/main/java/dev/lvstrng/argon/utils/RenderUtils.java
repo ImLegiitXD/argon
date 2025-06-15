@@ -1,10 +1,12 @@
 package dev.lvstrng.argon.utils;
 
+import com.mojang.blaze3d.systems.ProjectionType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.VertexSorter;
 import dev.lvstrng.argon.module.modules.client.ClickGUI;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.ShaderProgram;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.*;
@@ -22,7 +24,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static dev.lvstrng.argon.Argon.mc;
-
 
 public final class RenderUtils {
 	public static VertexSorter vertexSorter;
@@ -51,28 +52,30 @@ public final class RenderUtils {
 	}
 
 	public static void unscaledProjection() {
-		vertexSorter = RenderSystem.getVertexSorting();
-		RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(), 0, 1000, 21000), VertexSorter.BY_Z);
+		Matrix4f projectionMatrix = new Matrix4f().setOrtho(0, mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(), 0, 1000, 21000);
+		RenderSystem.setProjectionMatrix(projectionMatrix, ProjectionType.ORTHOGRAPHIC);
 		rendering3D = false;
 	}
 
 	public static void scaledProjection() {
-		RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, (float) (mc.getWindow().getFramebufferWidth() / mc.getWindow().getScaleFactor()), (float) (mc.getWindow().getFramebufferHeight() / mc.getWindow().getScaleFactor()), 0, 1000, 21000), vertexSorter);
+		Matrix4f projectionMatrix = new Matrix4f().setOrtho(0, (float) (mc.getWindow().getFramebufferWidth() / mc.getWindow().getScaleFactor()), (float) (mc.getWindow().getFramebufferHeight() / mc.getWindow().getScaleFactor()), 0, 1000, 21000);
+		RenderSystem.setProjectionMatrix(projectionMatrix, ProjectionType.ORTHOGRAPHIC);
 		rendering3D = true;
 	}
 
 	public static void renderRoundedQuad(MatrixStack matrices, Color c, double x, double y, double x2, double y2, double corner1, double corner2, double corner3, double corner4, double samples) {
 		int color = c.getRGB();
 		Matrix4f matrix = matrices.peek().getPositionMatrix();
-		float f = (float) (color >> 24 & 255) / 255.0F;
-		float g = (float) (color >> 16 & 255) / 255.0F;
-		float h = (float) (color >> 8 & 255) / 255.0F;
-		float k = (float) (color & 255) / 255.0F;
+		float alpha = (float) (color >> 24 & 255) / 255.0F;
+		float red = (float) (color >> 16 & 255) / 255.0F;
+		float green = (float) (color >> 8 & 255) / 255.0F;
+		float blue = (float) (color & 255) / 255.0F;
 		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
 		RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-		RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+		RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
-		renderRoundedQuadInternal(matrix, g, h, k, f, x, y, x2, y2, corner1, corner2, corner3, corner4, samples);
+		renderRoundedQuadInternal(matrix, red, green, blue, alpha, x, y, x2, y2, corner1, corner2, corner3, corner4, samples);
 		RenderSystem.enableCull();
 		RenderSystem.disableBlend();
 	}
@@ -148,7 +151,7 @@ public final class RenderUtils {
 		float h = (float) (color >> 8 & 255) / 255.0F;
 		float k = (float) (color & 255) / 255.0F;
 		setup();
-		RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+		RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 		BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
 		for (int i = 0; i < 360; i += Math.min(360 / segments1, 360 - i)) {
 			double radians = Math.toRadians(i);
@@ -181,7 +184,7 @@ public final class RenderUtils {
 		float h = (float) (color >> 8 & 255) / 255.0F;
 		float k = (float) (color & 255) / 255.0F;
 		setup();
-		RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+		RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
 		renderRoundedOutlineInternal(matrix, g, h, k, f, fromX, fromY, toX, toY, rad1, rad2, rad3, rad4, width, samples);
 		cleanup();
@@ -259,10 +262,19 @@ public final class RenderUtils {
 	public static void renderFilledBox(MatrixStack matrices, float f, float f2, float f3, float f4, float f5, float f6, Color color) {
 		RenderSystem.enableBlend();
 		RenderSystem.disableDepthTest();
-		RenderSystem.setShaderColor((float) color.getRed() / 255, (float) color.getGreen() / 255, (float) color.getBlue() / 255, (float) color.getAlpha() / 255);
-		RenderSystem.setShader(GameRenderer::getPositionProgram);
+		RenderSystem.setShaderColor(
+				(float) color.getRed() / 255f,
+				(float) color.getGreen() / 255f,
+				(float) color.getBlue() / 255f,
+				(float) color.getAlpha() / 255f
+		);
+
+		ShaderProgram shader = MinecraftClient.getInstance().getShaderLoader().getOrCreateProgram(ShaderProgramKeys.POSITION);
+		RenderSystem.setShader(shader);
+
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION);
+
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f, f2, f3);
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f, f2, f3);
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f, f2, f3);
@@ -293,7 +305,9 @@ public final class RenderUtils {
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f4, f5, f6);
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f4, f5, f6);
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f4, f5, f6);
+
 		BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+
 		RenderSystem.setShaderColor(1, 1, 1, 1);
 		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
@@ -305,7 +319,7 @@ public final class RenderUtils {
 
 	public static void renderLine(MatrixStack matrices, Color color, Vec3d start, Vec3d end) {
 		matrices.push();
-		Matrix4f s = matrices.peek().getPositionMatrix();
+		Matrix4f matrix = matrices.peek().getPositionMatrix();
 		if (ClickGUI.antiAliasing.getValue()) {
 			GL11.glEnable(GL13.GL_MULTISAMPLE);
 			GL11.glEnable(GL11.GL_LINE_SMOOTH);
@@ -319,14 +333,14 @@ public final class RenderUtils {
 		genericAABBRender(
 				VertexFormat.DrawMode.DEBUG_LINES,
 				VertexFormats.POSITION_COLOR,
-				GameRenderer::getPositionColorProgram,
-				s,
+				() -> MinecraftClient.getInstance().getShaderLoader().getOrCreateProgram(ShaderProgramKeys.POSITION_COLOR),
+				matrix,
 				start,
 				end.subtract(start),
 				color,
-				(buffer, x, y, z, x1, y1, z1, red, green, blue, alpha, matrix) -> {
-					buffer.vertex(matrix, x, y, z).color(red, green, blue, alpha);
-					buffer.vertex(matrix, x1, y1, z1).color(red, green, blue, alpha);
+				(buffer, x, y, z, x1, y1, z1, red, green, blue, alpha, mat) -> {
+					buffer.vertex(mat, x, y, z).color(red, green, blue, alpha);
+					buffer.vertex(mat, x1, y1, z1).color(red, green, blue, alpha);
 				}
 		);
 
@@ -354,13 +368,14 @@ public final class RenderUtils {
 		useBuffer(mode, format, shader, bufferBuilder -> action.run(bufferBuilder, x1, y1, z1, x2, y2, z2, red, green, blue, alpha, stack));
 	}
 
-	private static void useBuffer(VertexFormat.DrawMode mode, VertexFormat format, Supplier<ShaderProgram> shader, Consumer<BufferBuilder> runner) {
+	private static void useBuffer(VertexFormat.DrawMode mode, VertexFormat format, Supplier<ShaderProgram> shaderSupplier, Consumer<BufferBuilder> runner) {
 		Tessellator t = Tessellator.getInstance();
 		BufferBuilder bb = t.begin(mode, format);
 
 		runner.accept(bb);
 
 		setup();
+		ShaderProgram shader = shaderSupplier.get();
 		RenderSystem.setShader(shader);
 		BufferRenderer.drawWithGlobalProgram(bb.end());
 		cleanup();
