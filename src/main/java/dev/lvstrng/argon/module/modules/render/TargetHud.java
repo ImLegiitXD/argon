@@ -57,66 +57,54 @@ public final class TargetHud extends Module implements HudListener, PacketSendLi
 		int x = xCoord.getValueInt();
 		int y = yCoord.getValueInt();
 
-		RenderUtils.unscaledProjection();
-		if ((!hudTimeout.getValue() || (System.currentTimeMillis() - lastAttackTime <= timeout)) &&
-				mc.player.getAttacking() != null && mc.player.getAttacking() instanceof PlayerEntity player && player.isAlive()) {
-			animation = RenderUtils.fast(animation, mc.player.getAttacking() instanceof PlayerEntity player1 && player1.isAlive() ? 0 : 1, 15f);
+		RenderUtils.runUnscaled(context, () -> {
+			if ((!hudTimeout.getValue() || (System.currentTimeMillis() - lastAttackTime <= timeout)) &&
+					mc.player.getAttacking() instanceof PlayerEntity player && player.isAlive()) {
 
-			PlayerListEntry entry = mc.getNetworkHandler().getPlayerListEntry(player.getUuid());
-			float tx = (float) x;
-			float ty = (float) y;
-			MatrixStack matrixStack = context.getMatrices();
-			float thetaRotation = 90 * animation;
-			matrixStack.push();
-			matrixStack.translate(tx, ty, 0);
+				animation = RenderUtils.fast(animation, 0, 15f);
+				PlayerListEntry entry = mc.getNetworkHandler().getPlayerListEntry(player.getUuid());
 
-			matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(thetaRotation));
-			matrixStack.translate(-tx, -ty, 0);
+				float tx = (float) x;
+				float ty = (float) y;
+				MatrixStack matrixStack = context.getMatrices();
+				float thetaRotation = 90 * animation;
 
-			RenderUtils.renderRoundedQuad(context.getMatrices(), new Color(0, 0, 0, 175), x, y, x + 340, y + 200, 5, 5, 5, 5, 10);
-			RenderUtils.renderRoundedQuad(context.getMatrices(), Utils.getMainColor(255, 1), x, y + 27, x + 340, y + 29, 0, 0, 0, 0, 10);
+				matrixStack.push();
+				matrixStack.translate(tx, ty, 0);
+				matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(thetaRotation));
+				matrixStack.translate(-tx, -ty, 0);
 
-			TextRenderer.drawString(player.getName().getString() + " - " + MathUtils.roundToDecimal(player.distanceTo(mc.player), 0.5) + " blocks", context, x + 23, y + 5, Color.WHITE.getRGB());
+				RenderUtils.renderRoundedQuad(matrixStack, new Color(0, 0, 0, 175), x, y, x + 340, y + 200, 5, 5, 5, 5, 10);
+				RenderUtils.renderRoundedQuad(matrixStack, Utils.getMainColor(255, 1), x, y + 27, x + 340, y + 29, 0, 0, 0, 0, 10);
 
-			if (entry == null) {
-				int charOff1 = x + 5;
-				CharSequence chars = "Type: Bot";
+				TextRenderer.drawString(player.getName().getString() + " - " + MathUtils.roundToDecimal(player.distanceTo(mc.player), 0.5) + " blocks", context, x + 23, y + 5, Color.WHITE.getRGB());
 
-				TextRenderer.drawString(chars, context, charOff1, y + 35, new Color(255, 80, 80, 255).getRGB());
+				if (entry == null) {
+					TextRenderer.drawString("Type: Bot", context, x + 5, y + 35, new Color(255, 80, 80, 255).getRGB());
+					matrixStack.pop();
+					return;
+				} else {
+					TextRenderer.drawString("Type: Player", context, x + 5, y + 35, Color.WHITE.getRGB());
+				}
+
+				TextRenderer.drawString("Health: " + Math.round((player.getHealth() + player.getAbsorptionAmount())), context, x + 5, y + 65, Color.GREEN.getRGB());
+				context.fill(x, y + 200, x + 4, (y + 200) - Math.min(Math.round((player.getHealth() + player.getAbsorptionAmount()) * 5), 171), Color.GREEN.darker().getRGB());
+
+				TextRenderer.drawString("Invisible: " + (player.isInvisible() ? "Yes" : "No"), context, x + 5, y + 95, Color.WHITE.getRGB());
+				TextRenderer.drawString("Ping: " + entry.getLatency(), context, x + 5, y + 125, Color.WHITE.getRGB());
+
+				PlayerSkinDrawer.draw(context, entry.getSkinTextures(), x + 3, y + 3, 20);
+
+				if (player.hurtTime != 0) {
+					TextRenderer.drawString("Damage Tick: " + player.hurtTime, context, x + 125, y + 65, Color.WHITE.getRGB());
+					context.fill(x + 125, y + 80, x + 125 + (player.hurtTime * 15), y + 83, getDamageTickColor(player.hurtTime).getRGB());
+				}
 
 				matrixStack.pop();
-				RenderUtils.scaledProjection();
-				return;
 			} else {
-				int charOff1 = x + 5;
-				CharSequence chars = "Type: Player";
-
-				TextRenderer.drawString(chars, context, charOff1, y + 35, Color.white.getRGB());
+				animation = RenderUtils.fast(animation, 1, 15f);
 			}
-
-			TextRenderer.drawString("Health: " + Math.round((player.getHealth() + player.getAbsorptionAmount())), context, x + 5, y + 65, Color.GREEN.getRGB());
-			context.fill(x, y + 200, x + 4, (y + 200) - Math.min(Math.round((player.getHealth() + player.getAbsorptionAmount()) * 5), 171), Color.GREEN.darker().getRGB());
-			//RenderUtils.renderRoundedOutline(context, Color.green, x, y + 200, x, (y + 200) - Math.min(Math.round((player.getHealth() + player.getAbsorptionAmount()) * 5), 174), 0, 0, 0, 0, 3, 30);
-
-			TextRenderer.drawString("Invisible: " + (player.isInvisible() ? "Yes" : "No"), context, x + 5, y + 95, Color.WHITE.getRGB());
-
-			TextRenderer.drawString("Ping: " + entry.getLatency(), context, x + 5, y + 125, Color.WHITE.getRGB());
-
-			PlayerSkinDrawer.draw(context, entry.getSkinTextures(), x + 3, y + 3, 20);
-
-			if (player.hurtTime != 0) {
-				int charOff1 = x + 125;
-				CharSequence chars = ("Damage Tick: " + player.hurtTime);
-
-				TextRenderer.drawString(chars, context, charOff1, y + 65, Color.WHITE.getRGB());
-				//TextRenderer.drawString("Damage Tick: " + player.hurtTime, context, x + 125, y + 65, Color.WHITE.getRGB());
-				context.fill(x + 125, y + 80, (x + 125) + (player.hurtTime * 15), y + 83, getDamageTickColor(player.hurtTime).getRGB());
-			}
-			matrixStack.pop();
-		} else {
-			animation = RenderUtils.fast(animation, 1, 15f);
-		}
-		RenderUtils.scaledProjection();
+		});
 	}
 
 	private Color getDamageTickColor(int hurtTime) {

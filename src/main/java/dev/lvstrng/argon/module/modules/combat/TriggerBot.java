@@ -107,7 +107,7 @@ public final class TriggerBot extends Module implements TickListener, AttackList
 
 			if (((mc.player.getOffHandStack().getItem().getComponents().contains(DataComponentTypes.FOOD) || mc.player.getOffHandStack().getItem() instanceof ShieldItem) && GLFW.glfwGetMouseButton(mc.getWindow().getHandle(), GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS) && !whileUse.getValue())
 				return;
-			
+
 			if (!whileAscend.getValue() && ((!mc.player.isOnGround() && mc.player.getVelocity().y > 0) || (!mc.player.isOnGround() && mc.player.fallDistance <= 0.0F)))
 				return;
 

@@ -51,32 +51,33 @@ public final class StringBox extends RenderableSetting {
 
                 @Override
                 public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-                    RenderUtils.unscaledProjection();
-                    mouseX *= (int) MinecraftClient.getInstance().getWindow().getScaleFactor();
-                    mouseY *= (int) MinecraftClient.getInstance().getWindow().getScaleFactor();
-                    super.render(context, mouseX, mouseY, delta);
+                    RenderUtils.runUnscaled(context, () -> {
+                        super.render(context, mouseX, mouseY, delta);
 
-                    context.fill(0, 0, mc.getWindow().getWidth(), mc.getWindow().getHeight(), new Color(0, 0, 0, ClickGUI.background.getValue() ? 200 : 0).getRGB());
+                        context.fill(0, 0, mc.getWindow().getWidth(), mc.getWindow().getHeight(),
+                                new Color(0, 0, 0, ClickGUI.background.getValue() ? 200 : 0).getRGB());
 
-                    int screenMidX = mc.getWindow().getWidth() / 2;
-                    int screenMidY = mc.getWindow().getHeight() / 2;
+                        int screenMidX = mc.getWindow().getWidth() / 2;
+                        int screenMidY = mc.getWindow().getHeight() / 2;
 
-                    int contentWidth = Math.max(TextRenderer.getWidth(content), 600);
-                    int width = contentWidth + 30;
+                        int contentWidth = Math.max(TextRenderer.getWidth(content), 600);
+                        int width = contentWidth + 30;
 
-                    int startX = screenMidX - (width / 2);
-                    int startY = screenMidY - 30;
+                        int startX = screenMidX - (width / 2);
+                        int startY = screenMidY - 30;
 
-                    RenderUtils.renderRoundedQuad(context.getMatrices(), new Color(0, 0, 0, ClickGUI.alphaWindow.getValueInt()), startX, startY, startX + width, screenMidY + 30, 5, 5, 0, 0, 20);
-                    TextRenderer.drawCenteredString(setting.getName(), context, screenMidX, startY + 10, new Color(245, 245, 245, 255).getRGB());
-                    context.fill(startX, screenMidY, startX + width, screenMidY + 30, new Color(0, 0, 0, 120).getRGB());
+                        RenderUtils.renderRoundedQuad(context.getMatrices(), new Color(0, 0, 0, ClickGUI.alphaWindow.getValueInt()), startX, startY, startX + width, screenMidY + 30, 5, 5, 0, 0, 20);
 
-                    RenderUtils.renderRoundedOutline(context, new Color(50, 50, 50, 255), startX + 10, screenMidY + 5, startX + (width - 10), screenMidY + 25, 5, 5, 5, 5, 2, 20);
+                        TextRenderer.drawCenteredString(setting.getName(), context, screenMidX, startY + 10, new Color(245, 245, 245, 255).getRGB());
 
-                    TextRenderer.drawString(content, context, startX + 15, screenMidY + 8, new Color(245, 245, 245, 255).getRGB());
-                    context.fill(startX, screenMidY, startX + width, screenMidY + 1, Utils.getMainColor(255, 1).getRGB());
+                        context.fill(startX, screenMidY, startX + width, screenMidY + 30, new Color(0, 0, 0, 120).getRGB());
 
-                    RenderUtils.scaledProjection();
+                        RenderUtils.renderRoundedOutline(context, new Color(50, 50, 50, 255), startX + 10, screenMidY + 5, startX + (width - 10), screenMidY + 25, 5, 5, 5, 5, 2, 20);
+
+                        TextRenderer.drawString(content, context, startX + 15, screenMidY + 8, new Color(245, 245, 245, 255).getRGB());
+
+                        context.fill(startX, screenMidY, startX + width, screenMidY + 1, Utils.getMainColor(255, 1).getRGB());
+                    });
                 }
 
                 @Override

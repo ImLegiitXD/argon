@@ -34,7 +34,7 @@ public final class ClickGUI extends Module implements PacketReceiveListener {
 
 	public static final NumberSetting roundQuads = new NumberSetting(EncryptedString.of("Roundness"), 1, 10, 5, 1);
 	public static final ModeSetting<AnimationMode> animationMode = new ModeSetting<>(EncryptedString.of("Animations"), AnimationMode.Normal, AnimationMode.class);
-	public static final BooleanSetting antiAliasing = new BooleanSetting(EncryptedString.of("MSAA"), true)
+	public static final BooleanSetting antiAliasing = new BooleanSetting(EncryptedString.of("MSAA"), false)
 			.setDescription(EncryptedString.of("Anti Aliasing | This can impact performance if you're using tracers but gives them a smoother look |"));
 
 	public enum AnimationMode {

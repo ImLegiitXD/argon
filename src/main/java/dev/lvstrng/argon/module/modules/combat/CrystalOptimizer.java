@@ -9,6 +9,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.ToolMaterial;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Hand;
@@ -60,16 +62,14 @@ public final class CrystalOptimizer extends Module implements PacketSendListener
 					if (mc.crosshairTarget.getType() == HitResult.Type.ENTITY && mc.crosshairTarget instanceof EntityHitResult hit) {
 						if (hit.getEntity() instanceof EndCrystalEntity) {
 							Entity target = hit.getEntity();
-							World world = target.getWorld();
 
 							StatusEffectInstance weakness = mc.player.getStatusEffect(StatusEffects.WEAKNESS);
 							StatusEffectInstance strength = mc.player.getStatusEffect(StatusEffects.STRENGTH);
 							if (!(weakness == null || strength != null && strength.getAmplifier() > weakness.getAmplifier() || WorldUtils.isTool(mc.player.getMainHandStack())))
 								return;
 
-							hit.getEntity().kill((ServerWorld) world);
-							hit.getEntity().setRemoved(Entity.RemovalReason.KILLED);
-							hit.getEntity().onRemoved();
+							target.setRemoved(Entity.RemovalReason.KILLED);
+							target.onRemoved();
 						}
 					}
 				}

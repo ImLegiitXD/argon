@@ -15,6 +15,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
@@ -26,8 +27,6 @@ import java.util.function.Supplier;
 import static dev.lvstrng.argon.Argon.mc;
 
 public final class RenderUtils {
-	public static VertexSorter vertexSorter;
-	public static boolean rendering3D = true;
 
 	public static Vec3d getCameraPos() {
 		return mc.getBlockEntityRenderDispatcher().camera.getPos();
@@ -51,16 +50,12 @@ public final class RenderUtils {
 		return (new Vec3d((f2 * f3), f4, (f1 * f3))).normalize();
 	}
 
-	public static void unscaledProjection() {
-		Matrix4f projectionMatrix = new Matrix4f().setOrtho(0, mc.getWindow().getFramebufferWidth(), mc.getWindow().getFramebufferHeight(), 0, 1000, 21000);
-		RenderSystem.setProjectionMatrix(projectionMatrix, ProjectionType.ORTHOGRAPHIC);
-		rendering3D = false;
-	}
-
-	public static void scaledProjection() {
-		Matrix4f projectionMatrix = new Matrix4f().setOrtho(0, (float) (mc.getWindow().getFramebufferWidth() / mc.getWindow().getScaleFactor()), (float) (mc.getWindow().getFramebufferHeight() / mc.getWindow().getScaleFactor()), 0, 1000, 21000);
-		RenderSystem.setProjectionMatrix(projectionMatrix, ProjectionType.ORTHOGRAPHIC);
-		rendering3D = true;
+	public static void runUnscaled(DrawContext context, Runnable drawCall) {
+		float scale = (float) mc.getWindow().getScaleFactor();
+		context.getMatrices().push();
+		context.getMatrices().scale(1 / scale, 1 / scale, 1);
+		drawCall.run();
+		context.getMatrices().pop();
 	}
 
 	public static void renderRoundedQuad(MatrixStack matrices, Color c, double x, double y, double x2, double y2, double corner1, double corner2, double corner3, double corner4, double samples) {
@@ -262,19 +257,11 @@ public final class RenderUtils {
 	public static void renderFilledBox(MatrixStack matrices, float f, float f2, float f3, float f4, float f5, float f6, Color color) {
 		RenderSystem.enableBlend();
 		RenderSystem.disableDepthTest();
-		RenderSystem.setShaderColor(
-				(float) color.getRed() / 255f,
-				(float) color.getGreen() / 255f,
-				(float) color.getBlue() / 255f,
-				(float) color.getAlpha() / 255f
-		);
-
+		RenderSystem.setShaderColor((float) color.getRed() / 255, (float) color.getGreen() / 255, (float) color.getBlue() / 255, (float) color.getAlpha() / 255);
 		ShaderProgram shader = MinecraftClient.getInstance().getShaderLoader().getOrCreateProgram(ShaderProgramKeys.POSITION);
 		RenderSystem.setShader(shader);
-
 		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION);
-
+		BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION);
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f, f2, f3);
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f, f2, f3);
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f, f2, f3);
@@ -305,13 +292,13 @@ public final class RenderUtils {
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f4, f5, f6);
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f4, f5, f6);
 		bufferBuilder.vertex(matrices.peek().getPositionMatrix(), f4, f5, f6);
-
 		BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
 
 		RenderSystem.setShaderColor(1, 1, 1, 1);
 		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
 	}
+
 
 	interface RenderAction {
 		void run(BufferBuilder buffer, float x, float y, float z, float x1, float y1, float z1, float red, float green, float blue, float alpha, Matrix4f matrix);

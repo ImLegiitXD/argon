@@ -63,17 +63,16 @@ public final class ClickGui extends Screen {
 			if (mc.currentScreen instanceof ClickGui)
 				context.fill(0, 0, mc.getWindow().getWidth(), mc.getWindow().getHeight(), currentColor.getRGB());
 
-			RenderUtils.unscaledProjection();
-			mouseX *= (int) MinecraftClient.getInstance().getWindow().getScaleFactor();
-			mouseY *= (int) MinecraftClient.getInstance().getWindow().getScaleFactor();
-			super.render(context, mouseX, mouseY, delta);
+			RenderUtils.runUnscaled(context, () -> {
+				int scaledMouseX = (int) (mouseX * mc.getWindow().getScaleFactor());
+				int scaledMouseY = (int) (mouseY * mc.getWindow().getScaleFactor());
 
-			for (Window window : windows) {
-				window.render(context, mouseX, mouseY, delta);
-				window.updatePosition(mouseX, mouseY, delta);
-			}
-
-			RenderUtils.scaledProjection();
+				super.render(context, scaledMouseX, scaledMouseY, delta);
+				for (Window window : windows) {
+					window.render(context, scaledMouseX, scaledMouseY, delta);
+					window.updatePosition(scaledMouseX, scaledMouseY, delta);
+				}
+			});
 		}
 	}
 

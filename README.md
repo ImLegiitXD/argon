@@ -10,7 +10,7 @@ You are allowed to modify the code of this client and publish your version of th
 
 # Argon Minecraft Ghost Client
 
-## all the rendering issues are on RenderUtils (unscaledProjection & scaledProjection) idk how to fix them 😭
+## do not use customfont (if ykyk) $$
 
 ## Why?
 

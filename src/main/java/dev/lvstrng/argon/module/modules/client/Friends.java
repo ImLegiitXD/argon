@@ -94,17 +94,20 @@ public final class Friends extends Module implements ButtonListener, AttackListe
         if(!friendStatus.getValue())
             return;
 
-        RenderUtils.unscaledProjection();
-        if(WorldUtils.getHitResult(100) instanceof EntityHitResult hitResult) {
-            Entity entity = hitResult.getEntity();
-            DrawContext context = event.context;
+        RenderUtils.runUnscaled(event.context, () -> {
+            if (WorldUtils.getHitResult(100) instanceof EntityHitResult hitResult) {
+                Entity entity = hitResult.getEntity();
 
-            if(entity instanceof PlayerEntity player) {
-                if(manager.isFriend(player)) {
-                    TextRenderer.drawCenteredString(EncryptedString.of("Player is friend"), context, (mc.getWindow().getWidth() / 2), (mc.getWindow().getHeight() / 2) + 25, Color.GREEN.getRGB());
+                if (entity instanceof PlayerEntity player && manager.isFriend(player)) {
+                    TextRenderer.drawCenteredString(
+                            EncryptedString.of("Player is friend"),
+                            event.context,
+                            mc.getWindow().getWidth() / 2,
+                            mc.getWindow().getHeight() / 2 + 25,
+                            Color.GREEN.getRGB()
+                    );
                 }
             }
-        }
-        RenderUtils.scaledProjection();
+        });
     }
 }

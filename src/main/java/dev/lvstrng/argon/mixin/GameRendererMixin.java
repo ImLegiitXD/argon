@@ -25,17 +25,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
-	@Final
-	@Shadow
-	private MinecraftClient client;
 
 	@Final
-	@Shadow
-	private Camera camera;
+	@Shadow private MinecraftClient client;
+	@Final
+	@Shadow private Camera camera;
 
 	@Inject(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V", ordinal = 1))
 	private void onWorldRender(RenderTickCounter tickCounter, CallbackInfo ci) {
 		float tickDelta = tickCounter.getTickDelta(true);
+
 		float fov = computeFov(tickDelta);
 		Matrix4f projection = createProjectionMatrix(fov);
 
@@ -56,7 +55,9 @@ public abstract class GameRendererMixin {
 
 		if (client.options != null) {
 			fov = client.options.getFov().getValue().floatValue();
-			fov *= 1.0F; // simulates fovMultiplier
+
+			// simulates fovMultiplier yeh yeh yeh
+			fov *= 1.0F;
 		}
 
 		Entity entity = camera.getFocusedEntity();
